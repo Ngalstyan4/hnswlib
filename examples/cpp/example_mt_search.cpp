@@ -1,6 +1,6 @@
 #include "../../hnswlib/hnswlib.h"
 #include <thread>
-
+#include <chrono>
 
 // Multithreaded executor
 // The helper function copied from python_bindings/bindings.cpp (and that itself is copied from nmslib)
@@ -61,8 +61,13 @@ inline void ParallelFor(size_t start, size_t end, size_t numThreads, Function fn
 
 
 int main() {
-    int dim = 16;               // Dimension of the elements
-    int max_elements = 10000;   // Maximum number of elements, should be known beforehand
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    int dim = 256;               // Dimension of the elements
+    int max_elements = 100000;   // Maximum number of elements, should be known beforehand
     int M = 16;                 // Tightly connected with internal dimensionality of the data
                                 // strongly affects the memory consumption
     int ef_construction = 200;  // Controls index search speed/build speed tradeoff
@@ -82,17 +87,25 @@ int main() {
     }
 
     // Add data to index
+    auto t1 = high_resolution_clock::now();
     ParallelFor(0, max_elements, num_threads, [&](size_t row, size_t threadId) {
         alg_hnsw->addPoint((void*)(data + dim * row), row);
     });
+    auto t2 = high_resolution_clock::now();
+    auto delta = duration_cast<milliseconds>(t2 - t1);
+    std::cout << "Indexing time: " << delta.count() << "ms\n";
 
     // Query the elements for themselves and measure recall
     std::vector<hnswlib::labeltype> neighbors(max_elements);
+    t1 = high_resolution_clock::now();
     ParallelFor(0, max_elements, num_threads, [&](size_t row, size_t threadId) {
         std::priority_queue<std::pair<float, hnswlib::labeltype>> result = alg_hnsw->searchKnn(data + dim * row, 1);
         hnswlib::labeltype label = result.top().second;
         neighbors[row] = label;
     });
+    t2 = high_resolution_clock::now();
+    delta = duration_cast<milliseconds>(t2 - t1);
+    std::cout << "Query time: " << delta.count() << "ms\n";
     float correct = 0;
     for (int i = 0; i < max_elements; i++) {
         hnswlib::labeltype label = neighbors[i];

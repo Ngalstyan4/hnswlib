@@ -5,6 +5,12 @@ project(hnsw_lib
 add_library(hnswlib INTERFACE)
 target_include_directories(hnswlib INTERFACE .) 
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules (JEMALLOC jemalloc)
+
+pkg_search_module(JEMALLOC REQUIRED jemalloc)
+include_directories(${JEMALLOC_INCLUDE_DIRS})
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_CXX_STANDARD 11)
 
@@ -20,6 +26,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     add_executable(example_search examples/cpp/example_search.cpp)
     target_link_libraries(example_search hnswlib)
 
+    add_executable(example_je_search examples/cpp/example_search.cpp)
+    target_link_libraries(example_je_search ${JEMALLOC_LIBRARIES})
+
     add_executable(example_filter examples/cpp/example_filter.cpp)
     target_link_libraries(example_filter hnswlib)
 
@@ -28,6 +37,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     add_executable(example_mt_search examples/cpp/example_mt_search.cpp)
     target_link_libraries(example_mt_search hnswlib)
+
+    add_executable(example_mt_je_search examples/cpp/example_mt_search.cpp)
+    target_link_libraries(example_mt_je_search ${JEMALLOC_LIBRARIES})
 
     add_executable(example_mt_filter examples/cpp/example_mt_filter.cpp)
     target_link_libraries(example_mt_filter hnswlib)
