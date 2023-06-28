@@ -53,4 +53,15 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     add_executable(main tests/cpp/main.cpp tests/cpp/sift_1b.cpp)
     target_link_libraries(main hnswlib)
+
+    # C-callable library
+    add_library(hnsw hnswlib/libhnsw.cpp)
+    target_include_directories(hnsw INTERFACE .) 
+
+    add_executable(c_lib_test hnswlib/c_interface_test.cpp)
+    target_link_libraries(c_lib_test hnsw)
+
+    add_executable(cpp_lib_test hnswlib/cpp_interface_test)
+    target_link_libraries(cpp_lib_test hnswlib hnsw)
+ 
 endif()

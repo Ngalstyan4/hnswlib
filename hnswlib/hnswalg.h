@@ -369,6 +369,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
 
                         if (!top_candidates.empty())
                             lowerBound = top_candidates.top().first;
+
+
                     }
                 }
             }
